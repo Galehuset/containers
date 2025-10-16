@@ -1,4 +1,4 @@
-FROM alpine:3.18
+FROM alpine:3.22
 
 # install required packages (git, bash, inotify-tools, openssh-client, ca-certificates)
 RUN apk add --no-cache git bash inotify-tools openssh-client ca-certificates && \
