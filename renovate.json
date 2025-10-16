@@ -1,0 +1,13 @@
+{
+  "extends": ["config:base"],
+  "enabledManagers": ["dockerfile"],
+  "packageRules": [
+    {
+      "matchManagers": ["dockerfile"],
+      "matchFiles": ["(^|/)([^/]+/)?Dockerfile$"],
+      "groupName": "Docker base image updates",
+      "labels": ["dependencies", "docker"],
+      "automerge": false
+    }
+  ]
+}
