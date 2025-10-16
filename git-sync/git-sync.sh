@@ -121,6 +121,7 @@ ssh_to_https() {
 # --- Git utilities ---
 # Ensure repo dir exists and git configured (global) for author
 setup_git_config() {
+  log "setting up git config"
   git config --global core.fileMode false || true
   git config user.name "$GIT_AUTHOR_NAME"
   git config user.email "$GIT_AUTHOR_EMAIL"
