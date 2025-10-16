@@ -66,7 +66,7 @@ jobs:
 
       - name: Log in to GitHub Container Registry
         if: ${{ matrix.dir != '' }}
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
