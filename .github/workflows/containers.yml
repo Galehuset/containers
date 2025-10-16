@@ -72,6 +72,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Prepare lowercase repo name
+        run: |
+          echo "REPO=${GITHUB_REPOSITORY@L}" >> $GITHUB_ENV
+
       - name: Build and push image
         if: ${{ matrix.dir != '' }}
         uses: docker/build-push-action@v4
@@ -80,5 +84,5 @@ jobs:
           file: ${{ matrix.dir }}/Dockerfile
           push: ${{ github.ref == 'refs/heads/main' }}
           tags: |
-            ghcr.io/${{ matrix.dir }}:${{ github.sha }}
-            ghcr.io/${{ matrix.dir }}:latest
+            ghcr.io/${{ env.REPO }}/${{ matrix.dir }}:${{ github.sha }}
+            ghcr.io/${{ env.REPO }}/${{ matrix.dir }}:latest
