@@ -1,4 +1,3 @@
-# GitHub Actions workflow: build (and push on main) every top-level folder containing a Dockerfile
 name: Build and push container images
 
 on:
@@ -47,18 +46,26 @@ jobs:
       fail-fast: false
       matrix:
         dir: ${{ fromJson(needs.prepare-matrix.outputs.dirs) }}
-    if: matrix.dir != ''
+
     steps:
+      - name: Skip if directory name is empty
+        if: ${{ matrix.dir == '' }}
+        run: echo "Skipping empty matrix entry."
+
       - name: Checkout
+        if: ${{ matrix.dir != '' }}
         uses: actions/checkout@v4
 
       - name: Set up QEMU (for multi-platform builds)
+        if: ${{ matrix.dir != '' }}
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
+        if: ${{ matrix.dir != '' }}
         uses: docker/setup-buildx-action@v2
 
       - name: Log in to GitHub Container Registry
+        if: ${{ matrix.dir != '' }}
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
@@ -66,6 +73,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push image
+        if: ${{ matrix.dir != '' }}
         uses: docker/build-push-action@v4
         with:
           context: ${{ matrix.dir }}
@@ -74,5 +82,3 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.dir }}:${{ github.sha }}
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.dir }}:latest
-          # Add platforms if you want multi-arch images:
-          # platforms: linux/amd64,linux/arm64
