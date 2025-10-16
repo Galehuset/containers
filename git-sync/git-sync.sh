@@ -123,8 +123,8 @@ ssh_to_https() {
 setup_git_config() {
   log "setting up git config"
   git config --global core.fileMode false || true
-  git config user.name "$GIT_AUTHOR_NAME"
-  git config user.email "$GIT_AUTHOR_EMAIL"
+  git config --global user.name "$GIT_AUTHOR_NAME"
+  git config --global user.email "$GIT_AUTHOR_EMAIL"
 }
 
 # Initialize or update repo (used by --init)
