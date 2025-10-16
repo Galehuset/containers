@@ -136,6 +136,9 @@ init_repo() {
   read_auth
   write_netrc
 
+  log "DEBUG: GIT_URL=$GIT_URL, contents of /etc/git-secret:"
+  ls -l /etc/git-secret || true
+
   if [ -z "$(ls -A "$REPO_DIR")" ] && [ -n "$GIT_URL" ]; then
     clone_url="$GIT_URL"
     if [ -n "${GIT_TOKEN:-}" ]; then
