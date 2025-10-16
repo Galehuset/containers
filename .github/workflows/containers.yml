@@ -35,9 +35,9 @@ jobs:
           dirs = sorted([d for d in os.listdir('.') if os.path.isdir(d) and d not in excluded and os.path.exists(os.path.join(d, 'Dockerfile'))])
           print(json.dumps(dirs))
           PY
-                    echo "dirs<<EOF" >> $GITHUB_OUTPUT
-                    cat dirs.json >> $GITHUB_OUTPUT
-                    echo "EOF" >> $GITHUB_OUTPUT
+          echo "dirs<<EOF" >> $GITHUB_OUTPUT
+          cat dirs.json >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
   build:
     name: Build (and push on main) containers
