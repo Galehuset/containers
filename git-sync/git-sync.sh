@@ -11,6 +11,33 @@
 #
 set -euo pipefail
 
+# --- Global control flags ---
+STOP_REQUESTED=0
+CHILD_PIDS=()
+
+# Handle signals gracefully
+graceful_exit() {
+  log "Received termination signal; cleaning up..."
+  STOP_REQUESTED=1
+
+  # Kill background children (periodic_sync, inotifywait loops, etc.)
+  if [ "${#CHILD_PIDS[@]}" -gt 0 ]; then
+    for pid in "${CHILD_PIDS[@]}"; do
+      if kill -0 "$pid" 2>/dev/null; then
+        kill "$pid" 2>/dev/null || true
+      fi
+    done
+  fi
+
+  # Release lock if held
+  release_lock || true
+
+  log "Graceful shutdown complete."
+  exit 0
+}
+
+trap graceful_exit SIGINT SIGTERM
+
 # CLI flags
 INIT_ONLY=0
 for arg in "$@"; do
@@ -358,15 +385,19 @@ attempt_push() {
 
 # Background periodic sync
 periodic_sync() {
-  while true; do
-    sleep "$POLL_INTERVAL"
+  while [ "$STOP_REQUESTED" -eq 0 ]; do
+    sleep "$POLL_INTERVAL" &
+    wait $! || true
+    [ "$STOP_REQUESTED" -ne 0 ] && break
+
     case "$(safe_pull)" in
-      0) ;;   # success
+      0) ;;
       1) log "safe_pull: transient failure" ;;
       2) log "safe_pull: non-ff and abort strategy; manual resolution needed" ;;
       3) log "safe_pull: prefer-local detected; local will attempt to push later" ;;
     esac
   done
+  log "periodic_sync exiting."
 }
 
 # --- Main execution ---
@@ -410,20 +441,24 @@ write_netrc
 
 # Start background periodic sync
 periodic_sync &
+CHILD_PIDS+=($!)
 
 # Main watch loop (inotify if available, otherwise polling)
 if command -v inotifywait >/dev/null 2>&1; then
   log "Using inotifywait to watch for changes (excluding .git)..."
-  while true; do
+  while [ "$STOP_REQUESTED" -eq 0 ]; do
     inotifywait -r -e modify,attrib,close_write,move,create,delete --exclude '\.git' "$REPO_DIR" >/dev/null 2>&1 || true
+    [ "$STOP_REQUESTED" -ne 0 ] && break
     sleep "$DEBOUNCE_SECONDS"
+    [ "$STOP_REQUESTED" -ne 0 ] && break
     safe_pull || true
     attempt_push || true
   done
 else
   log "inotifywait not found; falling back to polling every $POLL_INTERVAL seconds."
-  while true; do
+  while [ "$STOP_REQUESTED" -eq 0 ]; do
     sleep "$POLL_INTERVAL"
+    [ "$STOP_REQUESTED" -ne 0 ] && break
     safe_pull || true
     attempt_push || true
   done
