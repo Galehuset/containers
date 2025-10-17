@@ -221,8 +221,24 @@ safe_pull() {
     return 1
   fi
 
+  # record pre-merge hash for diff display
+  local before_hash
+  before_hash="$(git rev-parse HEAD 2>/dev/null || echo '')"
+
   if git merge --ff-only "$REMOTE/$BRANCH" >/dev/null 2>&1; then
     log "Fast-forwarded to $REMOTE/$BRANCH"
+
+    local after_hash
+    after_hash="$(git rev-parse HEAD 2>/dev/null || echo '')"
+    if [ "$before_hash" != "$after_hash" ]; then
+      log "===== Changes after pull (summary) ====="
+      git diff --stat "$before_hash" "$after_hash" || true
+      log "===== Full diff after pull ====="
+      git diff "$before_hash" "$after_hash" || true
+    else
+      log "No content changes after pull."
+    fi
+
     release_lock
     return 0
   fi
@@ -236,7 +252,17 @@ safe_pull() {
       ;;
     prefer-remote)
       log "Prefer-remote: resetting local to remote (discarding local commits)"
+      local before_hash
+      before_hash="$(git rev-parse HEAD 2>/dev/null || echo '')"
       git reset --hard "$REMOTE/$BRANCH" || { log "Reset failed"; release_lock; return 1; }
+
+      local after_hash
+      after_hash="$(git rev-parse HEAD 2>/dev/null || echo '')"
+      log "===== Changes after reset to remote (summary) ====="
+      git diff --stat "$before_hash" "$after_hash" || true
+      log "===== Full diff after reset to remote ====="
+      git diff "$before_hash" "$after_hash" || true
+
       release_lock
       return 0
       ;;
@@ -262,7 +288,6 @@ attempt_push() {
 
   if last_commit_is_bot; then
     log "Last commit authored by bot with marker; avoid immediate re-commit to reduce loops."
-    # continue to still try pull/push cycles
   fi
 
   acquire_lock || { log "attempt_push: lock busy"; return 1; }
@@ -280,6 +305,12 @@ attempt_push() {
     release_lock
     return 1
   fi
+
+  # Show both summary and full diff of what we just committed
+  log "===== Changes committed locally (summary) ====="
+  git show --stat HEAD || true
+  log "===== Full diff of committed changes ====="
+  git show HEAD || true
 
   # fetch remote to know if push will be accepted
   if ! git fetch "$REMOTE" "$BRANCH" --quiet; then
