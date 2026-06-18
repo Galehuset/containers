@@ -23,7 +23,7 @@ jobs:
       dirs: ${{ steps.get-dirs.outputs.dirs }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Get list of top-level folders that contain a Dockerfile
         id: get-dirs
@@ -54,7 +54,7 @@ jobs:
 
       - name: Checkout
         if: ${{ matrix.dir != '' }}
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Set up QEMU (for multi-platform builds)
         if: ${{ matrix.dir != '' }}
