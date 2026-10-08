@@ -40,10 +40,16 @@ RUN install -d -m 775 -o 10001 -g 0 /var/log && \
     chmod -R g=u /opt/opennms/etc && \
     find /opt/opennms/data /opt/opennms/system /opennms-data -type d -print0 | xargs -0 chmod g=u
 
-LABEL org.opencontainers.image.title="OpenNMS Horizon ${VERSION} (UBI 9)" \
+# Shown on the GHCR package page. Unofficial: not built or supported by
+# The OpenNMS Group.
+LABEL org.opencontainers.image.title="OpenNMS Horizon ${VERSION} (UBI 9, unofficial)" \
+      org.opencontainers.image.description="Unofficial rebuild of the official opennms/horizon:${VERSION} image on a UBI 9 base, for x86-64 CPUs without x86-64-v3 (AVX2), e.g. Ivy Bridge. OpenNMS itself is unmodified." \
       org.opencontainers.image.version="${VERSION}" \
-      org.opencontainers.image.licenses="AGPL-3.0" \
-      org.opencontainers.image.description="Official Horizon ${VERSION} rebased on UBI 9 for CPUs without x86-64-v3"
+      org.opencontainers.image.licenses="AGPL-3.0-or-later" \
+      org.opencontainers.image.url="https://github.com/Galehuset/containers/tree/main/opennms-horizon" \
+      org.opencontainers.image.source="https://github.com/Galehuset/containers" \
+      org.opencontainers.image.documentation="https://docs.opennms.com/horizon/latest/" \
+      org.opencontainers.image.base.name="docker.io/opennms/deploy-base:ubi9-3.6.11.b376-jre-21"
 
 WORKDIR /opt/opennms
 USER 10001
