@@ -3,7 +3,8 @@
     "config:recommended"
   ],
   "enabledManagers": [
-    "dockerfile","github-actions"
+    "dockerfile",
+    "github-actions"
   ],
   "packageRules": [
     {
@@ -19,6 +20,14 @@
         "docker"
       ],
       "automerge": false
+    },
+    {
+      "description": "opennms-horizon exists to stay on UBI 9 (no x86-64-v3); only follow ubi9 jre-21 base tags.",
+      "matchPackageNames": [
+        "docker.io/opennms/deploy-base",
+        "opennms/deploy-base"
+      ],
+      "allowedVersions": "/^ubi9-.*-jre-21$/"
     }
   ]
 }

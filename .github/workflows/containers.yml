@@ -76,6 +76,18 @@ jobs:
         run: |
           echo "REPO=${GITHUB_REPOSITORY@L}" >> $GITHUB_ENV
 
+      # Optional version tag: a Dockerfile with a top-level `ARG VERSION=x`
+      # (e.g. the upstream release it packages) is also tagged :x, so
+      # deployments can pin something meaningful and Renovate can follow it.
+      - name: Version tag from Dockerfile
+        id: version
+        if: ${{ matrix.dir != '' }}
+        run: |
+          v=$(sed -nE 's/^ARG VERSION=([^[:space:]]+).*/\1/p' "${{ matrix.dir }}/Dockerfile" | head -1)
+          if [ -n "$v" ]; then
+            echo "tag=ghcr.io/${REPO}/${{ matrix.dir }}:${v}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build and push image
         if: ${{ matrix.dir != '' }}
         uses: docker/build-push-action@v6
@@ -86,3 +98,4 @@ jobs:
           tags: |
             ghcr.io/${{ env.REPO }}/${{ matrix.dir }}:${{ github.sha }}
             ghcr.io/${{ env.REPO }}/${{ matrix.dir }}:latest
+            ${{ steps.version.outputs.tag }}
