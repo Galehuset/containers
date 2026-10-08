@@ -1,6 +1,11 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    ":dependencyDashboard"
+  ],
+  "assignees": [
+    "mathsterk"
   ],
   "enabledManagers": [
     "dockerfile",
@@ -8,18 +13,24 @@
   ],
   "packageRules": [
     {
+      "description": "Same policy as Galehuset/k8s: minor/patch merge themselves once 3 days old and the PR's image build passes; majors wait for a human.",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Group each image's base updates into one PR.",
       "matchManagers": [
         "dockerfile"
       ],
-      "matchFiles": [
-        "(^|/)([^/]+/)?Dockerfile$"
-      ],
-      "groupName": "Docker base image updates",
+      "groupName": "{{parentDir}} base images",
       "labels": [
         "dependencies",
         "docker"
-      ],
-      "automerge": false
+      ]
     },
     {
       "description": "opennms-horizon exists to stay on UBI 9 (no x86-64-v3); only follow ubi9 jre-21 base tags.",
