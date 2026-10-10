@@ -13,7 +13,6 @@ on:
 permissions:
   contents: read
   packages: write
-  id-token: write
 
 jobs:
   prepare-matrix:
