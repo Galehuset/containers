@@ -9,7 +9,7 @@
 #
 # The runtime layer below mirrors opennms-container/core/Dockerfile in
 # OpenNMS/opennms; keep it in step when bumping across major versions.
-ARG VERSION=36.0.4
+ARG VERSION=36.0.5
 
 FROM docker.io/opennms/horizon:${VERSION} AS horizon
 
