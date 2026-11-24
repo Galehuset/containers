@@ -3,9 +3,25 @@
     "config:recommended"
   ],
   "enabledManagers": [
-    "dockerfile","github-actions"
+    "dockerfile","github-actions","custom.regex"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Versions pinned via ARG with a '# renovate:' comment in Dockerfiles",
+      "managerFilePatterns": ["/(^|/)Dockerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+?) depName=(?<depName>[^\\s]+?)(?: versioning=(?<versioning>[^\\s]+?))?\\s+ARG [A-Z0-9_]+?_VERSION=(?<currentValue>[^\\s]+)"
+      ]
+    }
   ],
   "packageRules": [
+    {
+      "matchPackageNames": ["rakshasa/rtorrent", "rakshasa/libtorrent"],
+      "groupName": "rtorrent",
+      "labels": ["dependencies", "rtorrent"],
+      "automerge": false
+    },
     {
       "matchManagers": [
         "dockerfile"
