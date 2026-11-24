@@ -5,10 +5,10 @@ on:
     branches:
       - main
       - "releases/**"
-      - "*"
   pull_request:
     branches:
       - "**"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -23,23 +23,47 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
-      - name: Get list of top-level folders that contain a Dockerfile
+      - name: Find container folders that changed
         id: get-dirs
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
         run: |
-          python3 - <<'PY' > dirs.json
+          # Build everything on manual runs, new branches, or when the workflow itself changes;
+          # otherwise only top-level folders with a Dockerfile that have changes.
+          case "$EVENT" in
+            pull_request) base="$PR_BASE" ;;
+            push)         base="$PUSH_BEFORE" ;;
+            *)            base="" ;;
+          esac
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            changed="ALL"
+          else
+            changed=$(git diff --name-only "$base"...HEAD)
+            if echo "$changed" | grep -q '^\.github/workflows/'; then changed="ALL"; fi
+          fi
+          echo "Changed files:"; echo "$changed"
+          CHANGED="$changed" python3 - <<'PY' > dirs.json
           import os, json
           excluded = {'.git', '.github'}
-          dirs = sorted([d for d in os.listdir('.') if os.path.isdir(d) and d not in excluded and os.path.exists(os.path.join(d, 'Dockerfile'))])
+          dirs = sorted(d for d in os.listdir('.') if os.path.isdir(d) and d not in excluded and os.path.exists(os.path.join(d, 'Dockerfile')))
+          changed = os.environ["CHANGED"]
+          if changed != "ALL":
+              touched = {f.split('/', 1)[0] for f in changed.splitlines() if '/' in f}
+              dirs = [d for d in dirs if d in touched]
           print(json.dumps(dirs))
           PY
-          echo "dirs<<EOF" >> $GITHUB_OUTPUT
-          cat dirs.json >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "Building: $(cat dirs.json)"
+          echo "dirs=$(cat dirs.json)" >> "$GITHUB_OUTPUT"
 
   build:
     name: Build (and push on main) containers
     needs: prepare-matrix
+    if: ${{ needs.prepare-matrix.outputs.dirs != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
