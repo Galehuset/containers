@@ -6,7 +6,7 @@ FROM alpine:3.22 AS build
 # renovate: datasource=github-tags depName=rakshasa/libtorrent
 ARG LIBTORRENT_VERSION=v0.16.28
 # renovate: datasource=github-tags depName=rakshasa/rtorrent
-ARG RTORRENT_VERSION=v0.16.28
+ARG VERSION=v0.16.28
 
 RUN apk add --no-cache \
       build-base autoconf automake libtool pkgconf git linux-headers \
@@ -14,7 +14,7 @@ RUN apk add --no-cache \
 
 WORKDIR /src
 RUN git clone --depth 1 --branch "${LIBTORRENT_VERSION}" https://github.com/rakshasa/libtorrent.git \
- && git clone --depth 1 --branch "${RTORRENT_VERSION}"  https://github.com/rakshasa/rtorrent.git
+ && git clone --depth 1 --branch "${VERSION}"  https://github.com/rakshasa/rtorrent.git
 
 RUN cd libtorrent \
  && autoreconf -fi \

@@ -1,40 +1,69 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    ":dependencyDashboard"
+  ],
+  "assignees": [
+    "mathsterk"
   ],
   "enabledManagers": [
-    "dockerfile","github-actions","custom.regex"
+    "dockerfile",
+    "github-actions",
+    "custom.regex"
   ],
   "customManagers": [
     {
       "customType": "regex",
       "description": "Versions pinned via ARG with a '# renovate:' comment in Dockerfiles",
-      "managerFilePatterns": ["/(^|/)Dockerfile$/"],
+      "managerFilePatterns": [
+        "/(^|/)Dockerfile$/"
+      ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>[a-z-]+?) depName=(?<depName>[^\\s]+?)(?: versioning=(?<versioning>[^\\s]+?))?\\s+ARG [A-Z0-9_]+?_VERSION=(?<currentValue>[^\\s]+)"
+        "# renovate: datasource=(?<datasource>[a-z-]+?) depName=(?<depName>[^\\s]+?)(?: versioning=(?<versioning>[^\\s]+?))?\\s+ARG (?:[A-Z0-9_]+_)?VERSION=(?<currentValue>[^\\s]+)"
       ]
     }
   ],
   "packageRules": [
     {
-      "matchPackageNames": ["rakshasa/rtorrent", "rakshasa/libtorrent"],
-      "groupName": "rtorrent",
-      "labels": ["dependencies", "rtorrent"],
-      "automerge": false
+      "description": "Same policy as Galehuset/k8s: minor/patch merge themselves once 3 days old and the PR's image build passes; majors wait for a human.",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "minimumReleaseAge": "3 days"
     },
     {
+      "description": "Group each image's base updates into one PR.",
       "matchManagers": [
         "dockerfile"
       ],
-      "matchFiles": [
-        "(^|/)([^/]+/)?Dockerfile$"
-      ],
-      "groupName": "Docker base image updates",
+      "groupName": "{{parentDir}} base images",
       "labels": [
         "dependencies",
         "docker"
+      ]
+    },
+    {
+      "description": "opennms-horizon exists to stay on UBI 9 (no x86-64-v3); only follow ubi9 jre-21 base tags.",
+      "matchPackageNames": [
+        "docker.io/opennms/deploy-base",
+        "opennms/deploy-base"
       ],
-      "automerge": false
+      "allowedVersions": "/^ubi9-.*-jre-21$/"
+    },
+    {
+      "description": "rtorrent + libtorrent bump together; follows the repo-wide minor/patch automerge policy.",
+      "matchPackageNames": [
+        "rakshasa/rtorrent",
+        "rakshasa/libtorrent"
+      ],
+      "groupName": "rtorrent",
+      "labels": [
+        "dependencies",
+        "rtorrent"
+      ]
     }
   ]
 }
