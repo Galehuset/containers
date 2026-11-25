@@ -1,7 +1,7 @@
 # Upstream rTorrent (rakshasa) with JSON-RPC + XML-RPC (tinyxml2) over SCGI.
 # JSON-RPC is always compiled in upstream (vendored nlohmann/json) and is on by default.
 
-FROM alpine:3.22 AS build
+FROM alpine:3.24 AS build
 
 # renovate: datasource=github-tags depName=rakshasa/libtorrent
 ARG LIBTORRENT_VERSION=v0.16.28
@@ -31,7 +31,7 @@ RUN cd rtorrent \
  && rm -rf /out/usr/include /out/usr/lib/pkgconfig /out/usr/lib/*.la /out/usr/lib/*.a /out/usr/share \
  && strip /out/usr/bin/rtorrent /out/usr/lib/libtorrent.so.*
 
-FROM alpine:3.22
+FROM alpine:3.24
 
 RUN apk add --no-cache libcurl libssl3 libcrypto3 zlib ncurses-libs libstdc++ libgcc ca-certificates tini
 
