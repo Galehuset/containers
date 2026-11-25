@@ -9,7 +9,20 @@
   ],
   "enabledManagers": [
     "dockerfile",
-    "github-actions"
+    "github-actions",
+    "custom.regex"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Versions pinned via ARG with a '# renovate:' comment in Dockerfiles",
+      "managerFilePatterns": [
+        "/(^|/)Dockerfile$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+?) depName=(?<depName>[^\\s]+?)(?: versioning=(?<versioning>[^\\s]+?))?\\s+ARG (?:[A-Z0-9_]+_)?VERSION=(?<currentValue>[^\\s]+)"
+      ]
+    }
   ],
   "packageRules": [
     {
@@ -39,6 +52,18 @@
         "opennms/deploy-base"
       ],
       "allowedVersions": "/^ubi9-.*-jre-21$/"
+    },
+    {
+      "description": "rtorrent + libtorrent bump together; follows the repo-wide minor/patch automerge policy.",
+      "matchPackageNames": [
+        "rakshasa/rtorrent",
+        "rakshasa/libtorrent"
+      ],
+      "groupName": "rtorrent",
+      "labels": [
+        "dependencies",
+        "rtorrent"
+      ]
     }
   ]
 }
