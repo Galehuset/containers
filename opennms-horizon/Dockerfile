@@ -3,8 +3,8 @@
 # Since Horizon 36 the official image is built on UBI 10, whose glibc needs
 # x86-64-v3 (AVX2); on older CPUs (e.g. Ivy Bridge Xeons) it dies at start
 # with "Fatal glibc error: CPU does not support x86-64-v3". Horizon itself is
-# Java, so this takes the finished /opt/opennms tree, entrypoint and confd
-# templates from the official image and puts them on OpenNMS' own UBI 9 +
+# Java, so this takes the finished /opt/opennms tree and entrypoint
+# from the official image and puts them on OpenNMS' own UBI 9 +
 # Java 21 deploy-base (the same JRE major the official 36 image uses).
 #
 # The runtime layer below mirrors opennms-container/core/Dockerfile in
@@ -19,7 +19,7 @@ ARG VERSION
 SHELL ["/bin/bash", "-c"]
 
 # Same packages and user as the official image.
-RUN microdnf -y install diffutils hostname jrrd2 jq rrdtool && \
+RUN microdnf -y install diffutils gettext hostname jrrd2 jq rrdtool && \
     microdnf clean all && \
     rm -rf /var/cache/yum && \
     groupadd --gid 10001 opennms && \
@@ -33,10 +33,10 @@ COPY --from=horizon --chown=10001:0 /opennms-data /opennms-data
 COPY --from=horizon --chown=10001:0 /opt/opennms-etc-overlay /opt/opennms-etc-overlay
 COPY --from=horizon --chown=10001:0 /opt/opennms-jetty-webinf-overlay /opt/opennms-jetty-webinf-overlay
 COPY --from=horizon --chown=10001:0 /opt/opennms-overlay /opt/opennms-overlay
-COPY --from=horizon --chown=10001:0 /etc/confd /etc/confd
 COPY --from=horizon --chown=10001:0 /entrypoint.sh /health.sh /
 
 RUN install -d -m 775 -o 10001 -g 0 /var/log && \
+    install -d -m 770 -o 10001 -g 0 /opt/prom-jmx-exporter && \
     chmod -R g=u /opt/opennms/etc && \
     find /opt/opennms/data /opt/opennms/system /opennms-data -type d -print0 | xargs -0 chmod g=u
 
